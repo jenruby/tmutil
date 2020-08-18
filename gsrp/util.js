@@ -30,37 +30,21 @@ function isSearchResult(element, ix){
     return(false);
   } else if (isAlsoAsklink(element, ix)){
     return(false); 
-  } else {
+  } else if (element.parentElement && element.parentElement['href'] ) {
     return(true);
   }
-  return(true); 
+  return(false); 
 }
-
-
-// function h_info(element, ix){  
-//   let related_search_div = isRelatedSearchDiv(element, ix);
-//   let str = `${ix} : `
-//   if (related_search_div){
-//     str = `${str} -- Related Searches`
-//   } else if (isImagesDiv(element, ix)){
-//     str = `${str} -- Images`
-//   } else if (isAlsoAsklink(element, ix)){
-//     str = `${str} -- Also Ask`
-//   } else {
-//     str = `${str}${element.parentElement.nodeName} :  ${element.innerText}`;
-//   }
-//   return(str);
-// }
 
 function search_results(){
  let rv = {title: 'Search Results', items: []};
- console.log('Search Results ------')
+ // console.log('Search Results ------')
  let h3s = document.querySelectorAll("h3");
  let i_sr = 1;
  [...h3s].forEach((element, ix) => {
     if (!isSearchResult(element, ix)) { return }
-    let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
-    console.log(str); 
+    // let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
+    // console.log(str); 
     rv.items.push({label: element.innerText, url: element.parentElement['href']});
     i_sr += 1; 
   })  
@@ -75,11 +59,11 @@ function also_asks(){
 
  // There are dual links. First link has user visible question, second has url
  let alist = aad.querySelectorAll('a');
- for (ix=0; ix < alist.length/2; ix++){
+ for (let ix=0; ix < alist.length/2; ix++){
    let a1 = alist[ix*2];
    let a2 = alist[ix*2+1];
    let str = `${ix+1}: ${a1['href']} : ${a2.innerHTML}`;
-    console.log(str); 
+    // console.log(str); 
     rv.items.push({q: a2.innerHTML, url: a1['href']});
  }
  return(rv);
@@ -99,7 +83,70 @@ function related_searches(){
 
 // What was queried?
 function query(){
-  document.querySelectorAll("input[name='q'][type='hidden']")[0].value  
+  return(document.querySelectorAll("input[name='q'][type='hidden']")[0].value);
+}
+
+// Copy string to the clipboard. No return value.
+// Use Paste Special CMD + SHIFT + v to paste as cells in Sheets
+function clipboard_copy(str) {
+  if (Array.isArray(str)) str = arr_cp(str);
+  const el = document.createElement('textarea');
+  el.value = str;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+};
+
+// Given an array, add tabs betweeen rows and LF between lines
+// Assumes each element of the array is also an array
+function arr_cp(arr) {
+    if (!Array.isArray(arr)) arr = [arr];
+    let pl = arr.map(e => Array.isArray(e) ? `${e.join('\t')}` : e);
+    return(pl.join('\n'));
+}
+
+// Result object for srp summary
+function srp_summary(){
+  let res = {};
+  res.query = query();
+  res.results = search_results().items;
+  res.also_asks = also_asks().items;
+  res.related = related_searches().items;
+  return(res);
+}
+
+// Create clipboard for copy to spreadsheet
+function xl_dmp(){
+  let rv = [];
+  let res = srp_summary();
+  let num_results, num_asks, num_related; 
+  [num_results, num_asks, num_related] = [res.results.length, res.also_asks.length, res.related.length];  
+  let tot_lines = Math.max(num_results, num_asks, num_related);
+  for (let ix=0; ix < tot_lines; ix++){
+    let tmp;
+    let row = [];
+    row.push(res.query);
+
+    // Results: Number, title, url
+    tmp = (num_results > ix) ? [ix+1, res.results[ix].label, res.results[ix].url] : [null, null, null]
+    tmp.forEach(e => row.push(e));
+
+    // Also asks: Number, title, url
+    tmp = (num_asks > ix) ? [ix+1, res.also_asks[ix].q, res.also_asks[ix].url] : [null, null, null]
+    tmp.forEach(e => row.push(e));
+
+    // Related: Number, terms
+    tmp = (num_related > ix) ? [ix+1, res.related[ix].label] : [null, null]
+    tmp.forEach(e => row.push(e));
+    rv.push(row);
+  }
+  clipboard_copy(rv);
+  console.log('Results copied to clipboard');
+  return(rv);
 }
 
 
@@ -107,12 +154,16 @@ function query(){
 // --
 //
 
+ xl_dmp();
 
-let sa = search_results();
-console.table(sa.items);
+// let sa = search_results();
+// console.log(sa.title);
+// console.table(sa.items);
 
-let aa = also_asks();
-console.table(aa.items);
+// let aa = also_asks();
+// console.log(aa.title);
+// console.table(aa.items);
 
-let rs = related_searches();
-console.table(rs.items);
+// let rs = related_searches();
+// console.log(rs.title);
+// console.table(rs.items);
