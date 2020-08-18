@@ -30,7 +30,7 @@ function isSearchResult(element, ix){
     return(false);
   } else if (isAlsoAsklink(element, ix)){
     return(false); 
-  } else if (element.parentElement && element.parentElement['href'] ) {
+  } else if (element.parentElement && element.parentElement.href ) {
     return(true);
   }
   return(false); 
@@ -45,7 +45,7 @@ function search_results(){
     if (!isSearchResult(element, ix)) { return }
     // let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
     // console.log(str); 
-    rv.items.push({label: element.innerText, url: element.parentElement['href']});
+    rv.items.push({label: element.innerText, url: element.parentElement.href});
     i_sr += 1; 
   })  
  return(rv);
@@ -62,9 +62,9 @@ function also_asks(){
  for (let ix=0; ix < alist.length/2; ix++){
    let a1 = alist[ix*2];
    let a2 = alist[ix*2+1];
-   let str = `${ix+1}: ${a1['href']} : ${a2.innerHTML}`;
+   let str = `${ix+1}: ${a1.href} : ${a2.innerHTML}`;
     // console.log(str); 
-    rv.items.push({q: a2.innerHTML, url: a1['href']});
+    rv.items.push({q: a2.innerHTML, url: a1.href});
  }
  return(rv);
 }
