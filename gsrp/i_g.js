@@ -33,12 +33,12 @@ var iG = {
   },
 
   hasSnippet: function(){
-    return(this.snippetA() ? true : false);
+    return(iG.snippetA() ? true : false);
   },
 
-  snippet(){
-    if (!this.hasSnippet()) return(null);
-    let a = this.snippetA();
+  snippet: function(){
+    if (!iG.hasSnippet()) return(null);
+    let a = iG.snippetA();
     let snipDiv = a.closest('div').parentElement.parentElement.previousSibling;
 
     let matched_a = [...snipDiv.querySelectorAll('a')].find(a => (!a.href.match(/google/))  )
@@ -51,11 +51,11 @@ var iG = {
 
   // True false based on if the given element is a search result
   isSearchResult: function(element, ix){
-    if (this.isRelatedSearchDiv(element, ix)){
+    if (iG.isRelatedSearchDiv(element, ix)){
       return(false);
-    } else if (this.isImagesDiv(element, ix)){
+    } else if (iG.isImagesDiv(element, ix)){
       return(false);
-    } else if (this.isAlsoAsklink(element, ix)){
+    } else if (iG.isAlsoAsklink(element, ix)){
       return(false);
     } else if (element.parentElement && element.parentElement.href ) {
       return(true);
@@ -69,7 +69,7 @@ var iG = {
    let h3s = document.querySelectorAll("h3");
    let i_sr = 1;
    [...h3s].forEach((element, ix) => {
-      if (!this.isSearchResult(element, ix)) { return }
+      if (!iG.isSearchResult(element, ix)) { return }
       // let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
       // console.log(str);
       rv.items.push({label: element.innerText, url: element.parentElement.href});
@@ -116,7 +116,7 @@ var iG = {
   // Copy string to the clipboard. No return value.
   // Use Paste Special CMD + SHIFT + v to paste as cells in Sheets
   clipboard_copy: function(str) {
-    if (Array.isArray(str)) str = this.arr_cp(str);
+    if (Array.isArray(str)) str = iG.arr_cp(str);
     const el = document.createElement('textarea');
     el.value = str;
     el.setAttribute('readonly', '');
@@ -139,18 +139,18 @@ var iG = {
   // Result object for srp summary
   srp_summary: function(){
     let res = {};
-    res.query     = this.query();
-    res.results   = this.search_results().items;
-    res.also_asks = this.also_asks().items;
-    res.related   = this.related_searches().items;
-    res.snippet   = this.snippet();
+    res.query     = iG.query();
+    res.results   = iG.search_results().items;
+    res.also_asks = iG.also_asks().items;
+    res.related   = iG.related_searches().items;
+    res.snippet   = iG.snippet();
     return(res);
   },
 
   // Create clipboard for copy to spreadsheet
   xl_dump: function(){
     let rv = [];
-    let res = this.srp_summary();
+    let res = iG.srp_summary();
     let num_results, num_asks, num_related;
     [num_results, num_asks, num_related] = [res.results.length, res.also_asks.length, res.related.length];
     let tot_lines = Math.max(num_results, num_asks, num_related);
@@ -177,10 +177,39 @@ var iG = {
 
       rv.push(row);
     }
-    this.clipboard_copy(rv);
+    iG.clipboard_copy(rv);
     console.log('Results copied to clipboard');
     return(rv);
+  },
+
+  btn_style = `
+  .copy_btn {
+      background-color: #5d965d;
+      padding: 5px;
+      font-size: 14px;
+      border: none;
   }
+  `;
+
+  add_style: function(style_str){    
+    let s = document.createElement('style');
+    s.type = "text/css";
+    s.innerHTML = style_str;
+    (document.head || document.documentElement).appendChild(s);
+  },
+
+  button: function(in_opts){
+   let opts = Object.assign({label: 'Copy', class: 'copy_btn'}, in_opts);
+   let btn = document.createElement("button");
+   btn.innerHTML = opts.label;
+   btn.className = opts.class;
+   btn.onclick = opts.onclick;
+   // If opts.parent is given, insert the button before opts.before
+   if (opts.before){
+     opts.before.parentElement.insertBefore(btn, opts.before);
+   }
+   return(btn);
+  },
 }
 
 window.iG = iG;
@@ -191,4 +220,9 @@ window.iG = iG;
 //     console.log('Loading in iG TM complete');
 // })();
 
-setTimeout(() => {iG.xl_dump}, 1000)
+// setTimeout(() => {iG.xl_dump}, 1000)
+
+if (document.querySelectorAll("h3.med").length > 0){
+  iS.add_style(iS.btn_style);
+  iS.button({label: 'Process', class: 'copy_btn', before: document.querySelectorAll("h3.med")[0], onclick: iG.xl_dump});
+}
