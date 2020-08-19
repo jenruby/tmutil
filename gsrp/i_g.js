@@ -1,3 +1,12 @@
+// TM script
+// To copy results use - 
+// $ iG.xl_dump()
+// Then paste special in sheets with columns: 
+// Search Term  | 
+// Result No | Result Title  | Result URL  
+// Also Ask No | Also Ask Title  | Also Ask URL  
+// Related Search no | Related Search Text                                 
+
 var iG = {
 
   isRelatedSearchDiv: function(element, ix){
@@ -6,7 +15,7 @@ var iG = {
     } else { return(null); }
   },
 
-  isImagesDiv: function(element, ix){  
+  isImagesDiv: function(element, ix){
     if ((element.parentElement.nodeName === "DIV") && (element.innerText.match(/^Images/)) ) {
       return(element.parentElement)
     } else { return(null); }
@@ -21,15 +30,15 @@ var iG = {
   // True false based on if the given element is a search result
   isSearchResult: function(element, ix){
     if (this.isRelatedSearchDiv(element, ix)){
-      return(false); 
+      return(false);
     } else if (this.isImagesDiv(element, ix)){
       return(false);
     } else if (this.isAlsoAsklink(element, ix)){
-      return(false); 
+      return(false);
     } else if (element.parentElement && element.parentElement.href ) {
       return(true);
     }
-    return(false); 
+    return(false);
   },
 
   search_results: function(){
@@ -40,10 +49,10 @@ var iG = {
    [...h3s].forEach((element, ix) => {
       if (!this.isSearchResult(element, ix)) { return }
       // let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
-      // console.log(str); 
+      // console.log(str);
       rv.items.push({label: element.innerText, url: element.parentElement.href});
-      i_sr += 1; 
-    })  
+      i_sr += 1;
+    })
    return(rv);
   },
 
@@ -59,7 +68,7 @@ var iG = {
      let a1 = alist[ix*2];
      let a2 = alist[ix*2+1];
      let str = `${ix+1}: ${a1.href} : ${a2.innerHTML}`;
-      // console.log(str); 
+      // console.log(str);
       rv.items.push({q: a2.innerHTML, url: a1.href});
    }
    return(rv);
