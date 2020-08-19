@@ -27,6 +27,28 @@ var iG = {
     } else { return(null); }
   },
 
+  snippetA: function(){
+    let rv = [...document.querySelectorAll('span a')].find(e => (e.text === 'About Featured Snippets'));
+    return(rv);
+  },
+
+  hasSnippet: function(){
+    return(this.snippetA() ? true : false);
+  },
+
+  snippet(){
+    if (!this.hasSnippet()) return(null);
+    let a = this.snippetA();
+    let snipDiv = a.closest('div').parentElement.parentElement.previousSibling;
+
+    let matched_a = [...snipDiv.querySelectorAll('a')].find(a => (!a.href.match(/google/))  )
+    rv = {
+      title: snipDiv.querySelector('h3').textContent,
+      url: matched_a ? matched_a.href : null, 
+    }
+    return(rv);
+  },
+
   // True false based on if the given element is a search result
   isSearchResult: function(element, ix){
     if (this.isRelatedSearchDiv(element, ix)){
@@ -117,10 +139,11 @@ var iG = {
   // Result object for srp summary
   srp_summary: function(){
     let res = {};
-    res.query = this.query();
-    res.results = this.search_results().items;
+    res.query     = this.query();
+    res.results   = this.search_results().items;
     res.also_asks = this.also_asks().items;
-    res.related = this.related_searches().items;
+    res.related   = this.related_searches().items;
+    res.snippet   = this.snippet();
     return(res);
   },
 
@@ -147,6 +170,11 @@ var iG = {
       // Related: Number, terms
       tmp = (num_related > ix) ? [ix+1, res.related[ix].label] : [null, null]
       tmp.forEach(e => row.push(e));
+
+      // Snippet: Title, URL
+      tmp = (res.snippet && ix == 0) ? [res.snippet.title, res.snippet.url] : [null, null]
+      tmp.forEach(e => row.push(e));
+
       rv.push(row);
     }
     this.clipboard_copy(rv);
