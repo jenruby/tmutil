@@ -20,11 +20,11 @@ var iG = {
 
   // True false based on if the given element is a search result
   isSearchResult: function(element, ix){
-    if (isRelatedSearchDiv(element, ix)){
+    if (this.isRelatedSearchDiv(element, ix)){
       return(false); 
-    } else if (isImagesDiv(element, ix)){
+    } else if (this.isImagesDiv(element, ix)){
       return(false);
-    } else if (isAlsoAsklink(element, ix)){
+    } else if (this.isAlsoAsklink(element, ix)){
       return(false); 
     } else if (element.parentElement && element.parentElement.href ) {
       return(true);
@@ -38,7 +38,7 @@ var iG = {
    let h3s = document.querySelectorAll("h3");
    let i_sr = 1;
    [...h3s].forEach((element, ix) => {
-      if (!isSearchResult(element, ix)) { return }
+      if (!this.isSearchResult(element, ix)) { return }
       // let str = `${i_sr}: ${element.innerText} : ${element.parentElement['href']}`;
       // console.log(str); 
       rv.items.push({label: element.innerText, url: element.parentElement.href});
@@ -85,7 +85,7 @@ var iG = {
   // Copy string to the clipboard. No return value.
   // Use Paste Special CMD + SHIFT + v to paste as cells in Sheets
   clipboard_copy: function(str) {
-    if (Array.isArray(str)) str = arr_cp(str);
+    if (Array.isArray(str)) str = this.arr_cp(str);
     const el = document.createElement('textarea');
     el.value = str;
     el.setAttribute('readonly', '');
@@ -108,19 +108,19 @@ var iG = {
   // Result object for srp summary
   srp_summary: function(){
     let res = {};
-    res.query = query();
-    res.results = search_results().items;
-    res.also_asks = also_asks().items;
-    res.related = related_searches().items;
+    res.query = this.query();
+    res.results = this.search_results().items;
+    res.also_asks = this.also_asks().items;
+    res.related = this.related_searches().items;
     return(res);
   },
 
   // Create clipboard for copy to spreadsheet
   xl_dump: function(){
     let rv = [];
-    let res = srp_summary();
-    let num_results, num_asks, num_related; 
-    [num_results, num_asks, num_related] = [res.results.length, res.also_asks.length, res.related.length];  
+    let res = this.srp_summary();
+    let num_results, num_asks, num_related;
+    [num_results, num_asks, num_related] = [res.results.length, res.also_asks.length, res.related.length];
     let tot_lines = Math.max(num_results, num_asks, num_related);
     for (let ix=0; ix < tot_lines; ix++){
       let tmp;
@@ -140,10 +140,18 @@ var iG = {
       tmp.forEach(e => row.push(e));
       rv.push(row);
     }
-    clipboard_copy(rv);
+    this.clipboard_copy(rv);
     console.log('Results copied to clipboard');
     return(rv);
   }
 }
 
 window.iG = iG;
+
+// (function() {
+//     'use strict';
+//     iG.xl_dump();
+//     console.log('Loading in iG TM complete');
+// })();
+
+setTimeout(() => {iG.xl_dump}, 1000)
