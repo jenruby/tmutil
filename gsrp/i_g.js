@@ -189,7 +189,7 @@ var iG = {
       font-size: 14px;
       border: none;
   }
-  `;
+  `,
 
   add_style: function(style_str){    
     let s = document.createElement('style');
