@@ -1,13 +1,13 @@
-// @require      https://raw.githubusercontent.com/jenruby/tmutil/master/gsrp/i_g.js
-
-// TM script
-// To copy results use - 
-// $ iG.xl_dump()
-// Then paste special in sheets with columns: 
-// Search Term  | 
-// Result No | Result Title  | Result URL  
-// Also Ask No | Also Ask Title  | Also Ask URL  
-// Related Search no | Related Search Text                                 
+// ==UserScript==
+// @name         iG
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  Extract Google Search Results to be saved in a spreadsheet
+// @author       You
+// @run-at       document-end
+// @match        https://www.google.com/search*
+// @grant        none
+// ==/UserScript==
 
 var iG = {
 
@@ -43,10 +43,10 @@ var iG = {
     let a = iG.snippetA();
     let snipDiv = a.closest('div').parentElement.parentElement.previousSibling;
 
-    let matched_a = [...snipDiv.querySelectorAll('a')].find(a => (!a.href.match(/google/))  )
-    rv = {
+    let matched_a = [...snipDiv.querySelectorAll('a')].find(a => (!a.href.match(/google/)))
+    let rv = {
       title: snipDiv.querySelector('h3').textContent,
-      url: matched_a ? matched_a.href : null, 
+      url: matched_a ? matched_a.href : null,
     }
     return(rv);
   },
@@ -83,7 +83,14 @@ var iG = {
   also_asks: function(){
     let rv = {title: 'People also ask', items: []};
    // Find the People also ask div
-   let aad = [...document.querySelectorAll('h2')].find(e => e.innerText.match(/^People\s+also\s+ask/)).parentElement;
+   let aad = [...document.querySelectorAll('h2')].find(e => e.innerText.match(/^People\s+also\s+ask/));
+   if(!aad){
+       console.log('People also asks section not found. Skipping.');
+       return(rv);
+   }
+   else {
+     aad = aad.parentElement;
+   }
    if (!(aad.nodeName === 'DIV')){ throw(`Parent of h2[People also ask] was expected to be DIV. Was: ${aad.nodeName}`)}
 
    // There are dual links. First link has user visible question, second has url
@@ -93,7 +100,7 @@ var iG = {
      let a2 = alist[ix*2+1];
      let str = `${ix+1}: ${a1.href} : ${a2.innerHTML}`;
       // console.log(str);
-      rv.items.push({q: a2.innerHTML, url: a1.href});
+      if (a1 && a2) { rv.items.push({q: a2.innerHTML, url: a1.href}) }
    }
    return(rv);
   },
@@ -141,11 +148,11 @@ var iG = {
   // Result object for srp summary
   srp_summary: function(){
     let res = {};
-    res.query     = iG.query();
-    res.results   = iG.search_results().items;
+    res.query = iG.query();
+    res.results = iG.search_results().items;
     res.also_asks = iG.also_asks().items;
-    res.related   = iG.related_searches().items;
-    res.snippet   = iG.snippet();
+    res.related = iG.related_searches().items;
+    res.snippet = iG.snippet();
     return(res);
   },
 
@@ -181,19 +188,21 @@ var iG = {
     }
     iG.clipboard_copy(rv);
     console.log('Results copied to clipboard');
+    alert('Results copied to clipboard. Use Command+Shift+V to copy to spreadsheet.');
     return(rv);
   },
 
-  btn_style = `
+  btn_style:`
   .copy_btn {
       background-color: #5d965d;
       padding: 5px;
       font-size: 14px;
       border: none;
+      color: #fff;
   }
   `,
 
-  add_style: function(style_str){    
+  add_style: function(style_str){
     let s = document.createElement('style');
     s.type = "text/css";
     s.innerHTML = style_str;
@@ -216,15 +225,8 @@ var iG = {
 
 window.iG = iG;
 
-// (function() {
-//     'use strict';
-//     iG.xl_dump();
-//     console.log('Loading in iG TM complete');
-// })();
-
-// setTimeout(() => {iG.xl_dump}, 1000)
-
 if (document.querySelectorAll("h3.med").length > 0){
-  iS.add_style(iS.btn_style);
-  iS.button({label: 'Process', class: 'copy_btn', before: document.querySelectorAll("h3.med")[0], onclick: iG.xl_dump});
+  window.iG.add_style(window.iG.btn_style);
+  window.iG.button({label: 'Process', class: 'copy_btn', before: document.querySelectorAll("h3.med")[0], onclick: window.iG.xl_dump});
 }
+
